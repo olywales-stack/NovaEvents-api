@@ -35,14 +35,13 @@ All write operations (buy ticket, sponsor, create event) happen directly on-chai
 
 ## Open for contributors
 
-- Integrate `@stellar/stellar-sdk` to query the contract
 - Index events into a local database for fast listing
 - Email / push notifications for ticket purchases and event updates
 - Image upload endpoint for event media (S3 or similar)
 
-See the [Issues](https://github.com/OlaGreat/NovaEvents-api/issues) tab for scoped tasks.
+See the [Issues](https://github.com/NovaFest-Labs/NovaEvents-api/issues) tab for scoped tasks.
 
 ## Related repos
 
-- [NovaEvents contract](https://github.com/OlaGreat/NovaEvents) — Soroban smart contract (Rust)
-- [NovaEvents App](https://github.com/OlaGreat/NovaEvents-app) — frontend (Next.js)
+- [NovaEvents contract](https://github.com/NovaFest-Labs/NovaEvents) — Soroban smart contract (Rust)
+- [NovaEvents App](https://github.com/NovaFest-Labs/NovaEvents-app) — frontend (Next.js)
