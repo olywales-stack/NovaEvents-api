@@ -1,29 +1,25 @@
 import { Router, Request, Response, NextFunction } from "express";
-import { xdr } from "@stellar/stellar-sdk";
-import { simulateContractCall } from "../lib/stellar";
 import { validateEventId } from "../middleware/validateEventId";
 import {
   getEventById,
   getTiersByEventId,
   getTicketById,
   getSponsorshipsByEventId,
+  getAllEvents,
+  EventsUnavailableError,
 } from "../services/eventsService";
 
 const router = Router();
 
 router.get("/", async (_req: Request, res: Response, next: NextFunction) => {
   try {
-    const count = (await simulateContractCall("event_count")) as number;
-    const events = await Promise.all(
-      Array.from({ length: count }, (_, i) =>
-        simulateContractCall("get_event", xdr.ScVal.scvU32(i)).then((e) => ({
-          id: i,
-          ...(e as object),
-        }))
-      )
-    );
+    const events = await getAllEvents();
     res.json(serializeBigInt(events));
   } catch (err) {
+    if (err instanceof EventsUnavailableError) {
+      res.status(503).json({ error: err.message });
+      return;
+    }
     next(err);
   }
 });

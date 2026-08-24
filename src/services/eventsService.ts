@@ -8,6 +8,15 @@ export class EventNotFoundError extends Error {
   }
 }
 
+export class EventsUnavailableError extends Error {
+  constructor(cause: unknown) {
+    super(
+      `failed to fetch events: ${cause instanceof Error ? cause.message : String(cause)}`
+    );
+    this.name = "EventsUnavailableError";
+  }
+}
+
 export class TicketNotFoundError extends Error {
   constructor(public readonly eventId: number, public readonly ticketId: number) {
     super(`ticket ${ticketId} not found for event ${eventId}`);
@@ -49,6 +58,23 @@ export async function getTicketById(eventId: number, ticketId: number): Promise<
       throw new TicketNotFoundError(eventId, ticketId);
     }
     throw err;
+  }
+}
+
+export async function getAllEvents(): Promise<Array<Record<string, unknown>>> {
+  try {
+    const count = (await simulateContractCall("event_count")) as number;
+    return await Promise.all(
+      Array.from({ length: count }, async (_, id) => {
+        const [event, tiers] = await Promise.all([
+          simulateContractCall("get_event", xdr.ScVal.scvU32(id)),
+          simulateContractCall("get_tiers", xdr.ScVal.scvU32(id)),
+        ]);
+        return { id, ...(event as object), tiers };
+      })
+    );
+  } catch (err) {
+    throw new EventsUnavailableError(err);
   }
 }
 

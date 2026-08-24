@@ -5,8 +5,10 @@ import {
   getTiersByEventId,
   getTicketById,
   getSponsorshipsByEventId,
+  getAllEvents,
   EventNotFoundError,
   TicketNotFoundError,
+  EventsUnavailableError,
 } from "./eventsService";
 
 vi.mock("../lib/stellar", () => ({
@@ -162,5 +164,41 @@ describe("getSponsorshipsByEventId", () => {
     });
 
     await expect(getSponsorshipsByEventId(0)).rejects.toBe(rpcFailure);
+  });
+});
+
+describe("getAllEvents", () => {
+  beforeEach(() => {
+    vi.mocked(simulateContractCall).mockReset();
+  });
+
+  it("returns each event merged with its id and tiers", async () => {
+    vi.mocked(simulateContractCall).mockImplementation(async (funcName: string, ...args) => {
+      if (funcName === "event_count") return 2;
+      if (funcName === "get_event") return { name: `Event ${args[0]}` };
+      if (funcName === "get_tiers") return [{ name: "General" }];
+      throw new Error(`unexpected contract call: ${funcName}`);
+    });
+
+    const result = await getAllEvents();
+
+    expect(result).toHaveLength(2);
+    expect(result[0]).toMatchObject({ id: 0, tiers: [{ name: "General" }] });
+    expect(result[1]).toMatchObject({ id: 1, tiers: [{ name: "General" }] });
+  });
+
+  it("returns an empty array when there are no events", async () => {
+    vi.mocked(simulateContractCall).mockImplementation(async (funcName: string) => {
+      if (funcName === "event_count") return 0;
+      throw new Error(`unexpected contract call: ${funcName}`);
+    });
+
+    await expect(getAllEvents()).resolves.toEqual([]);
+  });
+
+  it("throws EventsUnavailableError when the contract call fails", async () => {
+    vi.mocked(simulateContractCall).mockRejectedValue(new Error("RPC request timed out"));
+
+    await expect(getAllEvents()).rejects.toBeInstanceOf(EventsUnavailableError);
   });
 });
