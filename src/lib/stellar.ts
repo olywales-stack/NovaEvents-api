@@ -2,7 +2,6 @@ import {
   Account,
   BASE_FEE,
   Contract,
-  Networks,
   TransactionBuilder,
   scValToNative,
   xdr,
@@ -25,7 +24,7 @@ export async function simulateContractCall(
 ): Promise<unknown> {
   const tx = new TransactionBuilder(DUMMY_SOURCE, {
     fee: BASE_FEE,
-    networkPassphrase: Networks.TESTNET,
+    networkPassphrase: config.networkPassphrase,
   })
     .addOperation(contract.call(funcName, ...args))
     .setTimeout(30)
