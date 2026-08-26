@@ -1,5 +1,6 @@
 import { Router, Request, Response, NextFunction } from "express";
 import { validateEventId } from "../middleware/validateEventId";
+import { eventsListLimiter } from "../middleware/rateLimiter";
 import {
   getEventById,
   getTiersByEventId,
@@ -11,7 +12,7 @@ import {
 
 const router = Router();
 
-router.get("/", async (_req: Request, res: Response, next: NextFunction) => {
+router.get("/", eventsListLimiter, async (_req: Request, res: Response, next: NextFunction) => {
   try {
     const events = await getAllEvents();
     res.json(serializeBigInt(events));
