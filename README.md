@@ -33,6 +33,25 @@ Server starts on `http://localhost:3001`.
 
 All write operations (buy ticket, sponsor, create event) happen directly on-chain through the contract — not through this API.
 
+## Rate Limiting
+
+Rate limits are applied per IP address using [`express-rate-limit`](https://github.com/express-rate-limit/express-rate-limit).
+
+| Scope | Limit | Window |
+|-------|-------|--------|
+| Global (all routes) | 100 requests | 15 minutes |
+| `GET /api/events` | 20 requests | 15 minutes |
+
+`GET /api/events` has a stricter limit because each request fans out one Soroban RPC simulation per event (N+1 pattern), meaning a handful of unthrottled calls can generate significant RPC load.
+
+When a limit is exceeded the API responds with **HTTP 429** and a JSON body:
+
+```json
+{ "error": "Too many requests, please try again later." }
+```
+
+Standard `RateLimit-*` response headers (RFC 9110 draft-8) are included on every response so clients can track their remaining quota.
+
 ## Open for contributors
 
 - Index events into a local database for fast listing
